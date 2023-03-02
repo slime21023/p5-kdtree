@@ -146,7 +146,6 @@ const fullDisplay = (sketch) => {
         })
 
         totalDepth = KDtree.getTotalDepth(tree)
-        console.log(totalDepth)
     }
 
     sketch.draw = () => {
@@ -170,20 +169,19 @@ const fullDisplay = (sketch) => {
 
 // Partial Display Variable
 let filtedPoints = []
-let partialDepth = 4
+let partialDepth = 5
 let partialTree
 let partialEdges = []
 
 const partialDisplay = (sketch) => {
     sketch.setup = () => {
         sketch.createCanvas(400, 400)
+
         filtedPoints = KDtree.filteByDepth(tree, partialDepth)
         partialTree = new KDtree(filtedPoints, leafsize)
         partialEdges = KDtree.computeEdges(partialTree, {
             minX: 0, maxX: 400, minY: 0, maxY: 400
         })
-        console.log(filtedPoints)
-        console.log(partialTree)
     }
 
     sketch.draw = () => {
@@ -207,3 +205,59 @@ const partialDisplay = (sketch) => {
 
 const fullP5 = new p5(fullDisplay, 'fullDisplay')
 const partialP5 = new p5(partialDisplay, 'partialDisplay')
+
+const range = (start, end) => {
+    let result = []
+    for (i = start; i < end; i++) {
+        result.push(i)
+    }
+    return result
+}
+
+
+let rangeData = []
+const rangeDisplay = (sketch) => {
+    sketch.setup = () => {
+        sketch.createCanvas(400, 400)
+
+        let queryRange = range(totalDepth - 4, totalDepth - 1)
+
+        for (const depth of queryRange) {
+            let points = KDtree.filteByDepth(tree, depth)
+            let curTree = new KDtree(points, leafsize)
+            let curEdges = KDtree.computeEdges(curTree, {
+                minX: 0, maxX: 400, minY: 0, maxY: 400
+            })
+
+            rangeData.push({ points, tree: curTree, edges: curEdges })
+        }
+    }
+
+    sketch.draw = () => {
+        sketch.background(220);
+
+        const colors = ['blue', 'red', 'green']
+        let i = 0
+        for (const item of rangeData) {
+
+            sketch.stroke('purple');
+            sketch.strokeWeight(5);
+            for (const point of item.points) {
+                sketch.point(point.x, point.y);
+            }
+
+            sketch.strokeWeight(1);
+            sketch.stroke(colors[i]);
+
+            for (edge of item.edges) {
+                const { startX, startY, endX, endY } = edge
+                sketch.line(startX, startY, endX, endY)
+            }
+
+            i += 1
+        }
+    }
+}
+
+
+const rangeP5 = new p5(rangeDisplay, 'rangeDisplay')
